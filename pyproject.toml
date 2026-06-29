@@ -1,7 +1,7 @@
 [project]
 name = "holder-radar"
 version = "0.1.0"
-description = "Add your description here"
+description = "免費開源繁中的 BTC 持有者結構雷達(LTH/STH 供給+成本線,BigQuery 自算,LINE/TG 推播)"
 readme = "README.md"
 authors = [
     { name = "Gary Shen", email = "gary.shen@itrue.com.tw" }
