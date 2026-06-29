@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>持有者結構雷達 · BTC Holder Structure Radar</title>
+<meta name="description" content="比特幣持有者結構雷達:LTH/STH 供給結構與成本線,合成繁中白話判讀。本內容僅為資料整理,非投資建議。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&family=Spectral:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./assets/styles.css">
+</head>
+<body>
+<div class="page">
+
+  <!-- app bar: view toggle + sweep tweak -->
+  <div class="app-bar">
+    <div class="app-bar__title">持有者結構雷達 · BTC Holder Structure Radar</div>
+    <div class="app-bar__controls">
+      <label class="sweep-control"><input type="checkbox" id="sweep-toggle" checked>雷達掃描動畫</label>
+      <div class="view-tabs">
+        <button class="view-tab is-active" data-view-tab="editorial">編輯 · Editorial</button>
+        <button class="view-tab" data-view-tab="terminal">終端機 · Terminal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ EDITORIAL (LIGHT, COMPACT) ============ -->
+  <div data-view="editorial">
+    <div class="view-note">方向 A — 編輯 · 精簡單頁 / Editorial (Compact)</div>
+    <div class="dash">
+
+      <!-- top bar -->
+      <div class="dash-top">
+        <div class="brand">
+          <div class="radar-logo">
+            <div class="cross-v"></div><div class="cross-h"></div>
+            <div class="sweep"></div><div class="pip"></div>
+          </div>
+          <div class="brand__names">
+            <span class="brand__name">持有者結構雷達</span>
+            <span class="brand__sub">BTC · Holder Structure Radar</span>
+          </div>
+        </div>
+        <div class="meta-tags">
+          <span class="meta-tag"><span class="dot-green"></span>2026-06-29 09:10 UTC</span>
+          <span class="meta-tag">BigQuery × CoinGecko</span>
+          <span class="meta-tag muted">cohort 155 天</span>
+        </div>
+      </div>
+
+      <!-- hero row: judgment | donut | stats -->
+      <div class="hero">
+        <div>
+          <span class="signal-pill"><span class="pulse"></span>訊號觸發 · 跌穿 STH 成本線</span>
+          <h1>新手平均<span class="o">套牢</span>,老手默默<span class="b">抱緊</span>。</h1>
+          <p class="hero__lede">長期持有者握約 <b>79%</b> 供給;現價 <b>$59,800</b> 已跌穿短期持有者成本線 <b>$71,400</b> —— 近半年買家平均套牢約 16%,願意賣的籌碼正被抽乾。</p>
+        </div>
+        <div class="donut-wrap">
+          <div class="donut">
+            <div class="ring"></div>
+            <div class="cross-v"></div><div class="cross-h"></div>
+            <div class="sweep"></div>
+            <div id="donut-lg"></div>
+            <div class="donut__label">
+              <div class="donut__cap">籌碼沉澱</div>
+              <div class="donut__big">79<span>%</span></div>
+              <div class="donut__sub">LTH 供給</div>
+            </div>
+          </div>
+          <div class="donut-legend">
+            <span><span class="sw-blue"></span>LTH 15.57M</span>
+            <span><span class="sw-orange"></span>STH 4.14M</span>
+          </div>
+        </div>
+        <div class="hero__stats-host">
+          <div class="stats">
+            <div class="stat"><div class="stat__k">現價 BTC</div><div class="stat__v">$59,800</div><div class="stat__note o">▼ 低於成本線</div></div>
+            <div class="stat"><div class="stat__k">STH 成本線</div><div class="stat__v o">$71,400</div><div class="stat__note">近半年均價</div></div>
+            <div class="stat"><div class="stat__k">STH 套牢</div><div class="stat__v">16.2%</div><div class="stat__note">最慘投降區</div></div>
+            <div class="stat"><div class="stat__k">恐懼貪婪</div><div class="stat__v">17</div><div class="stat__note o">極度恐懼</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- glossary: STH / LTH -->
+      <div class="glossary">
+        <div class="gloss-cell">
+          <span class="gloss-chip o"></span>
+          <div>
+            <div class="gloss-term"><b class="code o">STH</b> 短期持有者 · 持幣 &lt; 155 天</div>
+            <div class="gloss-desc">熱錢、新手、換手快;一跌易恐慌認賠——市場波動的主要來源。</div>
+          </div>
+        </div>
+        <div class="gloss-cell">
+          <span class="gloss-chip b"></span>
+          <div>
+            <div class="gloss-term"><b class="code b">LTH</b> 長期持有者 · 持幣 ≥ 155 天</div>
+            <div class="gloss-desc">老錢、鑽石手;通常只在高點慢慢出貨——籌碼沉澱的指標。</div>
+          </div>
+        </div>
+        <div class="gloss-why"><div><b>為什麼是 155 天?</b> 統計上抱過約 155 天後,繼續持有不賣的機率大幅跳升——是經驗門檻,不是鐵律。</div></div>
+      </div>
+
+      <!-- charts + signals row -->
+      <div class="charts-row">
+        <div class="chart-cell">
+          <div class="chart-head">
+            <div class="chart-head__l"><span class="fig-no">圖 01 · 180天</span><h2>價格 vs 短期持有者成本線</h2></div>
+            <div class="legend">
+              <span><span class="line-solid"></span>價格</span>
+              <span><span class="line-dash"></span>STH 成本線</span>
+            </div>
+          </div>
+          <div class="chart-area">
+            <div id="price-chart"></div>
+            <div class="price-ylabels" id="price-ylabels"></div>
+            <div class="price-xlabels" id="price-xlabels"></div>
+          </div>
+          <div class="cross-caption"><span class="pip-static"></span><span id="cross-caption-date">6/13</span> 跌穿後,橘色區塊=近半年買家集體套牢的範圍。</div>
+        </div>
+        <div class="signals-cell">
+          <div class="signals-head">訊號 · 替你盯,該動就叮你</div>
+          <div class="signals">
+            <div class="signal-card alert">
+              <div class="signal-card__top"><span class="tag alert">ALERT</span><span class="signal-card__date">06/13</span></div>
+              <div class="signal-card__title">跌穿短期持有者成本線</div>
+              <div class="signal-card__body">近半年買進的人平均帳面套牢,波動主要來源正在認賠。</div>
+            </div>
+            <div class="signal-card">
+              <div class="signal-card__top"><span class="tag info">INFO</span><span class="signal-card__date">06/28</span></div>
+              <div class="signal-card__title">長期持有者供給創區間新高</div>
+              <div class="signal-card__body">願賣的幣被抽乾、浮動籌碼枯竭,老手在恐慌中默默吸籌。</div>
+            </div>
+            <div class="signal-card">
+              <div class="signal-card__top"><span class="tag info">INFO</span><span class="signal-card__date">06/26</span></div>
+              <div class="signal-card__title">短期持有者供給跌到區間新低</div>
+              <div class="signal-card__body">新進場的幣幾乎被洗空,換手率冰點,結構偏熊市末段。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- history full width -->
+      <div class="history">
+        <div class="history-head">
+          <div>
+            <div class="history-kicker">歷史怎麼讀 · HOW TO READ THE CROSS</div>
+            <h2>每一次「跌穿成本線」,歷史上長什麼樣?</h2>
+          </div>
+          <p>橘線=近 155 天買家的平均成本。價格在線上→平均賺;<b>跌穿→平均套牢</b>。下圖標出 2017 年至今每一段套牢期。</p>
+        </div>
+        <div class="hist-frame">
+          <div class="hist-plot">
+            <div id="hist-chart"></div>
+            <div class="hist-ylabels" id="hist-ylabels"></div>
+            <div class="hist-markers" id="hist-markers"></div>
+          </div>
+          <div class="hist-xlabels" id="hist-xlabels"></div>
+        </div>
+        <div class="hist-legend">
+          <span><span class="line-solid"></span>價格(對數軸)</span>
+          <span><span class="line-dash"></span>STH 成本線</span>
+          <span><span class="sw-band"></span>套牢期</span>
+        </div>
+        <div class="hist-episodes" id="hist-episode-cards"></div>
+        <div class="hist-takeaways">
+          <div class="takeaway o"><b>歷史共通點 · </b>熊市末段常見「STH 投降、LTH 吸籌」,浮動籌碼被抽乾——現況偏這一型。</div>
+          <div class="takeaway b"><b>誤讀提醒 · </b>跌穿 <b class="ink">不等於見底</b>(2022 一路投降一路跌)。155 天是經驗門檻、非鐵律,本圖只描述不預測。</div>
+        </div>
+      </div>
+
+      <!-- supply + footer row -->
+      <div class="supply-row">
+        <div class="supply-cell">
+          <div class="chart-head">
+            <div class="chart-head__l"><span class="fig-no">圖 02 · 180天</span><h2>供給結構 · LTH / STH</h2></div>
+            <div class="legend">
+              <span><span class="sw-orange" style="width:11px;height:11px;"></span>STH</span>
+              <span><span class="sw-blue" style="width:11px;height:11px;"></span>LTH</span>
+            </div>
+          </div>
+          <div id="supply-chart"></div>
+          <div class="supply-axis"><span>1月</span><span>6月 · LTH 79.0% / STH 21.0%</span></div>
+        </div>
+        <div class="footer-cell">
+          <div class="footer-cell__src">資料來源:BigQuery 公開資料集 <span class="code">crypto_bitcoin</span>(UTXO 年齡自算)+ CoinGecko(價格)。cohort 以 155 天為界,為經驗門檻、非物理定律。抓取 2026-06-29 09:10 UTC。</div>
+          <div class="footer-cell__bottom">
+            <div class="footer-cell__disc">本內容僅為資料整理,呈現結構與方法拆解,<b>非投資建議</b>。</div>
+            <div class="footer-cell__sign">追蹤卡皮鏈上室<br>每天用資料拆市場</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============ TERMINAL ============ -->
+  <div data-view="terminal" class="is-hidden">
+    <div class="view-note">方向 B — 終端機 · 高密度 / Terminal</div>
+    <div class="term">
+
+      <div class="term-top">
+        <div class="term-top__l"><span class="led">●</span> holder-radar // btc.cohort</div>
+        <div class="term-top__r">2026-06-29 09:10 UTC · src: bigquery+coingecko</div>
+      </div>
+
+      <div class="term-ticker">
+        <div class="tk"><div class="tk__k">STATUS</div><div class="tk__v o">⚠ STH_COST_CROSS_DOWN</div></div>
+        <div class="tk"><div class="tk__k">PRICE</div><div class="tk__v">$59,800</div></div>
+        <div class="tk"><div class="tk__k">STH_COST</div><div class="tk__v o">$71,400</div></div>
+        <div class="tk"><div class="tk__k">UNDERWATER</div><div class="tk__v">-16.2%</div></div>
+        <div class="tk"><div class="tk__k">LTH_SUPPLY</div><div class="tk__v b">79.0%</div></div>
+        <div class="tk" style="border-right:0;"><div class="tk__k">FNG</div><div class="tk__v">17</div></div>
+      </div>
+
+      <div class="term-judge">
+        <div class="term-judge__line">
+          <span class="prompt">radar&gt;</span> judge --synthesize<br>
+          <span class="out">長期持有者握約 <span class="b">79%</span> 供給;現價 $59,800 低於短期持有者成本線 $71,400 —— <span class="o">新手平均套牢、老手抱緊、浮動籌碼枯竭。</span></span>
+        </div>
+      </div>
+
+      <div class="term-chart">
+        <div class="term-chart__head">
+          <span class="k">PRICE_VS_STH_COST [180d]</span>
+          <span class="lg">— price &nbsp; <span class="o">- - sth_cost</span></span>
+        </div>
+        <div class="term-plot">
+          <div id="t-price-chart"></div>
+          <div class="term-ylabels" id="t-price-ylabels"></div>
+        </div>
+      </div>
+
+      <div class="term-split">
+        <div class="term-split__l">
+          <div class="term-band-head">
+            <span class="k">SUPPLY_BAND</span>
+            <span class="v"><span class="b">LTH 79.0</span> / <span class="o">STH 21.0</span></span>
+          </div>
+          <div id="t-supply-chart"></div>
+        </div>
+        <div class="term-split__r">
+          <div class="term-log-head">SIGNAL_LOG</div>
+          <div class="term-log">
+            <div class="term-log__row"><span class="date">06/13</span><span class="lvl alert">[ALERT]</span><span class="msg">跌穿 STH 成本線 — 近半年買家平均套牢</span></div>
+            <div class="term-log__row"><span class="date">06/28</span><span class="lvl info">[INFO]&nbsp;</span><span class="msg">LTH 供給創區間新高 — 浮動籌碼枯竭</span></div>
+            <div class="term-log__row"><span class="date">06/26</span><span class="lvl info">[INFO]&nbsp;</span><span class="msg">STH 供給創區間新低 — 新買家被洗空</span></div>
+            <div class="term-log__row"><span class="date">06/20</span><span class="lvl ok">[INFO]&nbsp;</span><span class="msg">FNG 跌入極度恐懼 — 區間 17</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="term-footer">
+        // src: bigquery-public-data.crypto_bitcoin + coingecko · cohort=155d · 本內容僅為資料整理,<span class="o">非投資建議</span> · 追蹤卡皮鏈上室
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============ PUSH SHOWCASE — mobile + LINE / Telegram ============ -->
+  <div class="push-showcase">
+    <div class="view-note">行動版 RWD + LINE / Telegram 推播(皆為文字訊息)</div>
+    <div class="push-stage">
+
+      <!-- phone mobile dashboard -->
+      <div class="phone">
+        <div class="phone__notch"><div></div></div>
+        <div class="phone__top">
+          <div class="phone__brand">
+            <div class="radar-logo sm">
+              <div class="sweep"></div><div class="pip"></div>
+            </div>
+            <div class="name">持有者結構雷達</div>
+          </div>
+          <span class="phone__date">06-29</span>
+        </div>
+
+        <div class="phone__hero">
+          <span class="signal-pill"><span class="pulse"></span>跌穿 STH 成本線</span>
+          <h1>新手平均<span class="o">套牢</span>,<br>老手默默<span class="b">抱緊</span>。</h1>
+          <p>長期持有者握約 79% 供給;現價 $59,800 已跌穿成本線 $71,400,近半年買家平均套牢約 16%。</p>
+        </div>
+
+        <div class="phone__donut-wrap">
+          <div class="donut sm">
+            <div class="sweep"></div>
+            <div class="ring"></div>
+            <div id="m-donut"></div>
+            <div class="donut__label">
+              <div class="donut__big">79<span>%</span></div>
+              <div class="donut__sub">LTH 供給</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="phone__stats">
+          <div class="phone__stat"><div class="k">現價</div><div class="v">$59,800</div></div>
+          <div class="phone__stat"><div class="k">STH 成本線</div><div class="v o">$71,400</div></div>
+          <div class="phone__stat"><div class="k">套牢幅度</div><div class="v">16.2%</div></div>
+          <div class="phone__stat"><div class="k">FNG</div><div class="v o">17 恐懼</div></div>
+        </div>
+
+        <div class="phone__chart">
+          <div class="k">價格 vs STH 成本線</div>
+          <div id="m-price-chart"></div>
+        </div>
+
+        <div class="phone__foot">資料:BigQuery + CoinGecko · 2026-06-29。本內容僅為資料整理,<span class="o">非投資建議</span>。</div>
+      </div>
+
+      <!-- push notifications -->
+      <div class="push-col">
+        <div class="push-intro">訊號觸發的那一刻,雷達主動推一則訊息給你。LINE 與 Telegram <b>都是純文字訊息</b> —— 同一句合成判讀,在兩邊的呈現如下。</div>
+
+        <!-- LINE -->
+        <div class="push-app line">
+          <div class="push-app__bar"><span class="push-app__icon">L</span>持有者結構雷達</div>
+          <div class="push-app__body">
+            <div class="bubble line">⚠️ 比特幣跌穿短期持有者成本線(約 $71,400)——最近約半年買進的人,平均帳面套牢約 16%。<br><br>長期持有者握約 79% 供給,浮動籌碼持續枯竭。<br><br><span class="disc">—— 本內容僅為資料整理,非投資建議。</span></div>
+            <div class="push-time">09:11</div>
+          </div>
+        </div>
+
+        <!-- Telegram -->
+        <div class="push-app tg">
+          <div class="push-app__bar"><span class="push-app__icon">T</span>Holder Radar Bot</div>
+          <div class="push-app__body">
+            <div class="bubble tg">⚠️ 比特幣跌穿短期持有者成本線(約 $71,400)——最近約半年買進的人,平均帳面套牢約 16%。<br><br>長期持有者握約 79% 供給,浮動籌碼持續枯竭。<br><br><span class="disc">—— 本內容僅為資料整理,非投資建議。</span><span class="tg-time">09:11 ✓✓</span></div>
+          </div>
+        </div>
+
+        <!-- query reply note -->
+        <div class="push-note"><span class="free">免費</span> 使用者主動詢問(reply)無限次;主動盯盤推播走 LINE 免費額度 200 則/月,個人盯盤足夠。</div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+<script src="./assets/radar.js"></script>
+</body>
+</html>
