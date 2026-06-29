@@ -76,6 +76,19 @@ uv run pytest -q              # 跑測試(目前 13 綠)
 
 ---
 
+## 部署(公開儀表板 + 自架警報)
+
+| 元件 | 上線在哪 | 伺服器 |
+|---|---|---|
+| **儀表板 app/** | **你的 GitHub Pages**(一個公開網址,大家直接看)| 無(靜態)|
+| **每日算+推播** | **GitHub Actions** 排程(自架者各自 fork、設自己的 LINE OA secrets)| 無(cron)|
+| **LINE 互動查詢** | ⏸️ 暫不做(要常駐端點,push-only MVP 先零伺服器)| — |
+
+- 儀表板已可上線:`.github/workflows/pages.yml` 會把 `app/` 發到 Pages。
+  你只要 ① 把 repo 推上 GitHub ② Settings → Pages 選 GitHub Actions,公開網址即生效(先 demo 數字)。
+- `data.json` 接點完成後,每日 workflow 會 commit `data.json` 進 `app/`,Pages 自動換成真實數字。
+- **為什麼這樣分**:LINE push 按人頭計費,大眾免費推播做不到 → 儀表板公開一份大家看,**要警報的人 fork 自架、用自己的免費額度**。
+
 ## 現況
 
 | 模組 | 狀態 |
