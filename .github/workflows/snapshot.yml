@@ -1,8 +1,11 @@
 name: Cohort snapshot (BigQuery)
 
-# 用 BigQuery 全量更新 cohort 慢變數(供給 + STH 成本線)。每次約 0.45TB。
-# 手動觸發(workflow_dispatch)。要自動跑請取消下方 schedule 註解(1 號 & 15 號 = 2次/月,守免費額度)。
-# 需先在 repo Settings → Secrets 設:GCP_SA_JSON(service account 金鑰)、GCP_PROJECT。
+# 用 BigQuery 全量更新 cohort 慢變數(供給 + STH 成本線)。每次掃描約 0.45TB。
+#
+# ⚠️⚠️ 會花錢:BigQuery 每月「1TB 免費」只在 Sandbox(未綁帳單)帳號保證有效。
+#       綁了帳單帳號可能拿不到免費額度 → 每次約 $7 USD。確認你是 Sandbox 再開這個。
+#
+# 手動觸發(workflow_dispatch)。需先在 Settings → Secrets 設 GCP_SA_JSON、GCP_PROJECT。
 on:
   workflow_dispatch:
   # schedule:
@@ -25,6 +28,7 @@ jobs:
         run: uv run python -m holder_radar.cli snapshot
         env:
           GOOGLE_CLOUD_PROJECT: ${{ secrets.GCP_PROJECT }}
+          HOLDER_RADAR_RUN_SNAPSHOT: "1"   # 明確同意跑 BigQuery(見上方花錢警告)
       - name: commit 快照
         run: |
           git config user.name "holder-radar-bot"

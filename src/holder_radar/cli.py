@@ -40,6 +40,12 @@ def main() -> None:  # pragma: no cover - 組裝真實依賴,需 GCP/LINE 憑證
     conn = store.init_db(db)
     cmd = sys.argv[1] if len(sys.argv) > 1 else "daily"
     if cmd == "snapshot":
+        # 防呆:snapshot 會跑 BigQuery 並計費(billing 帳號無免費額度時約 $7/次)。
+        # 必須明確設旗標才准跑,避免不小心燒錢。Sandbox 帳號才真免費。
+        if not os.getenv("HOLDER_RADAR_RUN_SNAPSHOT"):
+            raise SystemExit(
+                "snapshot 會跑 BigQuery 並可能計費(此帳號可能無免費額度)。\n"
+                "確定要跑請設 HOLDER_RADAR_RUN_SNAPSHOT=1。")
         from google.cloud import bigquery
         from holder_radar import bigquery_cohort
         as_of = os.getenv("AS_OF_DATE") or __import__("datetime").date.today().isoformat()

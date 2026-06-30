@@ -13,9 +13,12 @@ from holder_radar import config
 
 
 def build_age_breakdown_query(as_of_date: str) -> str:
-    """回傳「未花費 UTXO 依出生日加總 BTC」的 SQL。結果 ~6000 列(date, btc)。"""
+    """回傳「未花費 UTXO 依出生日加總 BTC」的 SQL。結果 ~6000 列(date, btc)。
+
+    ⚠️ 單一 SELECT 陳述式,**不可用 DECLARE**:DECLARE 會讓查詢變成 SCRIPT,
+       parent+child 各計費一次 = 帳單翻倍。as_of 直接以字面值內聯。
+    """
     return f"""
-    DECLARE as_of TIMESTAMP DEFAULT TIMESTAMP('{as_of_date} 00:00:00');
     WITH unspent AS (
       SELECT o.value AS sats, o.block_timestamp AS born
       FROM `bigquery-public-data.crypto_bitcoin.outputs` o
@@ -23,7 +26,7 @@ def build_age_breakdown_query(as_of_date: str) -> str:
         ON o.transaction_hash = i.spent_transaction_hash
        AND o.index = i.spent_output_index
       WHERE i.spent_transaction_hash IS NULL
-        AND o.block_timestamp <= as_of
+        AND o.block_timestamp <= TIMESTAMP('{as_of_date} 00:00:00')
     )
     SELECT DATE(born) AS d, SUM(sats) / 1e8 AS btc
     FROM unspent GROUP BY d ORDER BY d
