@@ -41,6 +41,8 @@ def build_dashboard_data(price_by_date: dict, snapshots: list[dict], latest: dic
     under_pct = (cb - cur_price) / cb * 100 if cb else 0
     return {
         "meta": {"as_of": latest["date"], "source": "BigQuery 公開資料集 × CoinGecko",
+                 "price_as_of": dates[-1] if dates else latest["date"],          # 價格即時
+                 "cohort_as_of": latest.get("cohort_date") or latest["date"],    # 持有者結構算出日(凍結)
                  "disclaimer": "本內容僅為資料整理,非投資建議。"},
         "price": price, "cost": cost, "lth": lth_pct,
         "donut": {"lth_pct": round(lp / 100, 4),

@@ -408,6 +408,10 @@
     set("r-under", L.underwater_str);
     const donut = document.getElementById("r-donut");
     if (donut && L.lth_pct_str) donut.innerHTML = L.lth_pct_str.replace("%", "<span>%</span>");
+    // 誠實標示:價格即時 vs 持有者結構截至某日(凍結)
+    const M = D.meta || {};
+    if (M.price_as_of) set("r-asof-price", "現價 " + M.price_as_of + " · 即時");
+    if (M.cohort_as_of) set("r-asof-cohort", "持有者結構截至 " + M.cohort_as_of);
   }
 
   function init() {

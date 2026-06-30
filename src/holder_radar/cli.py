@@ -14,8 +14,9 @@ def daily(conn, notifier, price: float, price_by_date: dict, data_js_path: str) 
     prev = latest
     today = {k: latest[k] for k in
              ("lth_btc", "sth_btc", "circulating_btc", "sth_cost_basis", "lth_cost_basis")}
-    today["date"] = max(price_by_date)        # 最新有價格的日期
+    today["date"] = max(price_by_date)        # 今天的價格日期
     today["price"] = price
+    today["cohort_date"] = latest.get("cohort_date") or latest["date"]  # 保留 cohort 真正算出的日期
     store.upsert_cohort(conn, today)
     sigs = judge.detect(today, prev, store.recent(conn, 90))
     if notifier and any(s.level == "alert" for s in sigs):
@@ -28,7 +29,7 @@ def daily(conn, notifier, price: float, price_by_date: dict, data_js_path: str) 
 
 def snapshot(conn, cohort_source, as_of_date: str, price: float) -> dict:
     """BigQuery 全量更新 cohort（吃 ~0.45TB 額度，≤2次/月）。"""
-    row = {**cohort_source.run(), "date": as_of_date, "price": price}
+    row = {**cohort_source.run(), "date": as_of_date, "price": price, "cohort_date": as_of_date}
     store.upsert_cohort(conn, row)
     return row
 
