@@ -1,0 +1,34 @@
+name: Cohort snapshot (BigQuery)
+
+# 用 BigQuery 全量更新 cohort 慢變數(供給 + STH 成本線)。每次約 0.45TB。
+# 手動觸發(workflow_dispatch)。要自動跑請取消下方 schedule 註解(1 號 & 15 號 = 2次/月,守免費額度)。
+# 需先在 repo Settings → Secrets 設:GCP_SA_JSON(service account 金鑰)、GCP_PROJECT。
+on:
+  workflow_dispatch:
+  # schedule:
+  #   - cron: "0 2 1,15 * *"   # 取消註解即每月 1、15 號自動跑(需先設好 GCP secrets)
+
+permissions:
+  contents: write
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --frozen
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_JSON }}
+      - name: BigQuery 全量更新 cohort
+        run: uv run python -m holder_radar.cli snapshot
+        env:
+          GOOGLE_CLOUD_PROJECT: ${{ secrets.GCP_PROJECT }}
+      - name: commit 快照
+        run: |
+          git config user.name "holder-radar-bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/snapshot.sqlite app/assets/data.js
+          git commit -m "data: cohort snapshot" || echo "no change"
+          git push || echo "nothing to push"

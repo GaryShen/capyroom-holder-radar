@@ -103,4 +103,16 @@ uv run pytest -q              # 跑測試(目前 13 綠)
 
 ---
 
+## 自架(免費)
+
+1. **Fork** 這個 repo。
+2. Settings → **Pages** → Source 選 **GitHub Actions** → 你的公開儀表板網址即生效。
+   - `Daily update` workflow 每天免費跑(CoinGecko 現價 + 重生 data.js),**不需任何 secret**。
+3. (選配)**LINE 警報**:Settings → Secrets 設 `LINE_TOKEN`、`LINE_TO`(自己的 LINE 官方帳號 Messaging API)→ 跌穿成本線時推你自己(免費 200則/月個人盯盤夠用)。
+4. (選配)**自己更新 cohort**:設 `GCP_SA_JSON`、`GCP_PROJECT`,手動跑 `Cohort snapshot` workflow(BigQuery,每次約 0.45TB,**守 1TB/月免費**,建議 ≤2次/月)。
+
+> **免費紀律**:cohort 查詢每次先 dry-run 量測掃描量(不計額度),確認 <1TB 才真跑。
+
+---
+
 本內容僅為資料整理,非投資建議。
