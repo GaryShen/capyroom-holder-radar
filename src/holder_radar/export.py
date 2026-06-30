@@ -56,6 +56,7 @@ def build_dashboard_data(price_by_date: dict, snapshots: list[dict], latest: dic
                    "lth_pct_str": f"{lp:.0f}%",
                    "lth_btc_str": f"{latest['lth_btc'] / 1e6:.2f}M",
                    "sth_btc_str": f"{latest['sth_btc'] / 1e6:.2f}M",
+                   "circ_str": f"{latest['circulating_btc'] / 1e6:.2f}M",
                    "underwater_str": f"{under_pct:.1f}%"},
     }
 

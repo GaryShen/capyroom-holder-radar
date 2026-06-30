@@ -406,6 +406,7 @@
     set("r-price", L.price_str);
     set("r-cost", L.cost_str);
     set("r-under", L.underwater_str);
+    set("r-circ", L.circ_str);
     const donut = document.getElementById("r-donut");
     if (donut && L.lth_pct_str) donut.innerHTML = L.lth_pct_str.replace("%", "<span>%</span>");
     // 誠實標示:價格即時 vs 持有者結構截至某日(凍結)
