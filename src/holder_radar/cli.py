@@ -1,24 +1,30 @@
 """入口,兩條路:
-- daily()    : 免費。抓現價、比上次存的成本線偵測跌穿、(alert才)推播、更新 data.js。不碰 BigQuery。
-- snapshot() : BigQuery 全量更新 cohort(慢變數)。守 ≤2次/月——只手動/低頻觸發。
+- daily()    : 免費。抓現價 + 免費即時 cohort(bgeometrics)→ 偵測跌穿 → (alert才)推播 → 更新 data.js。不碰 BigQuery。
+- snapshot() : BigQuery 全量自算 cohort(備援/驗證用)。會計費,預設不用,加防呆。
 """
 import os
 from holder_radar import store, judge, export
 
 
-def daily(conn, notifier, price: float, price_by_date: dict, data_js_path: str) -> list:
-    """免費每日路:cohort 沿用最近一次快照,只換今天的價格,偵測跌穿。"""
+def daily(conn, notifier, price: float, price_by_date: dict, data_js_path: str,
+          fresh_cohort: dict | None = None) -> list:
+    """免費每日路:有 fresh_cohort(bgeometrics 即時)就用它,否則沿用上次 cohort 前推;偵測跌穿。"""
     latest = store.latest(conn)
-    if not latest:
-        raise SystemExit("尚無 cohort 快照,請先跑 snapshot()(BigQuery)。")
-    prev = latest
-    today = {k: latest[k] for k in
-             ("lth_btc", "sth_btc", "circulating_btc", "sth_cost_basis", "lth_cost_basis")}
-    today["date"] = max(price_by_date)        # 今天的價格日期
-    today["price"] = price
-    today["cohort_date"] = latest.get("cohort_date") or latest["date"]  # 保留 cohort 真正算出的日期
-    store.upsert_cohort(conn, today)
-    sigs = judge.detect(today, prev, store.recent(conn, 90))
+    today_date = max(price_by_date)
+    if fresh_cohort:
+        row = {**fresh_cohort, "date": today_date, "price": price}
+        row.setdefault("cohort_date", today_date)
+    elif latest:
+        row = {k: latest[k] for k in
+               ("lth_btc", "sth_btc", "circulating_btc", "sth_cost_basis", "lth_cost_basis")}
+        row["date"] = today_date
+        row["price"] = price
+        row["cohort_date"] = latest.get("cohort_date") or latest["date"]  # 保留 cohort 真正日期
+    else:
+        raise SystemExit("尚無 cohort 資料,且即時來源抓取失敗。")
+    prev = latest or row
+    store.upsert_cohort(conn, row)
+    sigs = judge.detect(row, prev, store.recent(conn, 90))
     if notifier and any(s.level == "alert" for s in sigs):
         notifier.send(sigs)
     export.write_data_js(
@@ -61,7 +67,13 @@ def main() -> None:  # pragma: no cover - 組裝真實依賴,需 GCP/LINE 憑證
         snapshot(conn, _Src(), as_of, prices.current_btc_usd())
     else:  # daily
         from holder_radar.notify import LineAdapter
+        from holder_radar import bgeometrics
         px = prices.daily_history(180)
+        try:
+            fresh = bgeometrics.fetch_cohort()      # 免費即時 cohort
+        except Exception as e:
+            print(f"bgeometrics 抓取失敗,改用上次 cohort 前推:{e}")
+            fresh = None
         notifier = (LineAdapter(os.environ["LINE_TOKEN"], os.environ["LINE_TO"])
                     if os.getenv("LINE_TOKEN") else None)
-        daily(conn, notifier, prices.current_btc_usd(), px, "app/assets/data.js")
+        daily(conn, notifier, prices.current_btc_usd(), px, "app/assets/data.js", fresh_cohort=fresh)

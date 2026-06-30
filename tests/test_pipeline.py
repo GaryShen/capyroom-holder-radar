@@ -21,6 +21,17 @@ def test_daily_alerts_on_cross_down_and_writes_data_js(tmp_path):
     assert "window.RADAR_DATA" in data_js.read_text(encoding="utf-8")
 
 
+def test_daily_uses_fresh_cohort_with_source_date(tmp_path):
+    conn = store.init_db(tmp_path / "t.sqlite")
+    fresh = dict(lth_btc=16.65e6, sth_btc=3.4e6, circulating_btc=20.05e6,
+                 sth_cost_basis=69911.0, lth_cost_basis=49213.0, cohort_date="2026-06-29")
+    cli.daily(conn, None, 59000.0, {"2026-06-30": 59000.0}, str(tmp_path / "d.js"), fresh_cohort=fresh)
+    row = store.latest(conn)
+    assert row["sth_cost_basis"] == 69911.0
+    assert row["date"] == "2026-06-30"          # 價格日期 = 今天
+    assert row["cohort_date"] == "2026-06-29"   # cohort 日期 = 來源日
+
+
 def test_daily_no_push_when_price_stays_above(tmp_path):
     conn = store.init_db(tmp_path / "t.sqlite")
     store.upsert_cohort(conn, SNAP)

@@ -7,30 +7,29 @@ class _R:
     def json(self): return self._j
 
 
-def test_pick_value_skips_date_and_timestamp():
-    assert bg._pick_value({"d": "2026-06-29", "unixTs": 1751155200,
-                           "sthRealizedPrice": 71402.5}) == 71402.5
+def test_pick_value_skips_timestamp_and_links():
+    item = {"unixTs": "1751155200", "sthRealizedPrice": "69911.62",
+            "_links": {"self": {"href": "x"}}}
+    assert bg._pick_value(item) == 69911.62
 
 
-def test_pick_value_handles_string_numbers():
-    assert bg._pick_value({"theDate": "2026-06-29", "value": "70451.0"}) == 70451.0
-
-
-def test_fetch_cohort_maps_all_metrics():
-    responses = {
-        "sth-realized-price": {"d": "2026-06-29", "sthRealizedPrice": 70451.0},
-        "lth-realized-price": {"d": "2026-06-29", "lthRealizedPrice": 30000.0},
-        "long-term-holder-supply": {"d": "2026-06-29", "value": 16_640_000.0},
-        "short-term-holder-supply": {"d": "2026-06-29", "value": 3_280_000.0},
+def test_fetch_cohort_maps_metrics_and_date():
+    data = {
+        "sthRealizedPrices": ("sthRealizedPrice", "69911.62"),
+        "lthRealizedPrices": ("lthRealizedPrice", "49213.04"),
+        "longTermHodlerSupplyBtcs": ("longTermHodlerSupplyBtc", 16_650_381.99),
+        "shortTermHodlerSupplyBtcs": ("shortTermHodlerSupplyBtc", 3_399_372.27),
     }
 
-    def fake_get(url, **kw):
-        for path, j in responses.items():
-            if f"/{path}/last" in url:
-                return _R(j)
-        raise AssertionError(f"unexpected url: {url}")
+    def fake_get(url, params=None, **kw):
+        ep = url.rsplit("/", 1)[-1]
+        field, val = data[ep]
+        item = {"unixTs": "1", field: val,
+                "_links": {"self": {"href": f"https://x/{ep}/2026-06-29"}}}
+        return _R({"_embedded": {ep: [item]}})
 
     c = bg.fetch_cohort(get=fake_get)
-    assert c["sth_cost_basis"] == 70451.0
-    assert c["lth_cost_basis"] == 30000.0
-    assert c["circulating_btc"] == 16_640_000.0 + 3_280_000.0
+    assert c["sth_cost_basis"] == 69911.62
+    assert c["lth_cost_basis"] == 49213.04
+    assert c["circulating_btc"] == 16_650_381.99 + 3_399_372.27
+    assert c["cohort_date"] == "2026-06-29"
