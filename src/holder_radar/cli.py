@@ -1,27 +1,60 @@
-"""每日入口:算今天 → 寫 store → 偵測 → (只在 alert 時)推播。"""
-from holder_radar import store, judge
+"""入口,兩條路:
+- daily()    : 免費。抓現價、比上次存的成本線偵測跌穿、(alert才)推播、更新 data.js。不碰 BigQuery。
+- snapshot() : BigQuery 全量更新 cohort(慢變數)。守 ≤2次/月——只手動/低頻觸發。
+"""
+import os
+from holder_radar import store, judge, export
 
 
-def run_daily(conn, cohort_source, notifier, as_of_date: str, price: float) -> list:
-    """cohort_source.run() -> dict(5 個 cohort 欄位,不含 date/price)。"""
-    prev = store.latest(conn)
-    row = {**cohort_source.run(), "date": as_of_date, "price": price}
-    store.upsert_cohort(conn, row)
-    history = store.recent(conn, 90)
-    sigs = judge.detect(row, prev or row, history)
-    if notifier and any(s.level == "alert" for s in sigs):  # 省 LINE 額度:只推 alert
+def daily(conn, notifier, price: float, price_by_date: dict, data_js_path: str) -> list:
+    """免費每日路:cohort 沿用最近一次快照,只換今天的價格,偵測跌穿。"""
+    latest = store.latest(conn)
+    if not latest:
+        raise SystemExit("尚無 cohort 快照,請先跑 snapshot()(BigQuery)。")
+    prev = latest
+    today = {k: latest[k] for k in
+             ("lth_btc", "sth_btc", "circulating_btc", "sth_cost_basis", "lth_cost_basis")}
+    today["date"] = max(price_by_date)        # 最新有價格的日期
+    today["price"] = price
+    store.upsert_cohort(conn, today)
+    sigs = judge.detect(today, prev, store.recent(conn, 90))
+    if notifier and any(s.level == "alert" for s in sigs):
         notifier.send(sigs)
+    export.write_data_js(
+        export.build_dashboard_data(price_by_date, store.recent(conn, 400), store.latest(conn)),
+        data_js_path)
     return sigs
 
 
-def main() -> None:  # pragma: no cover - 組裝真實依賴,需 GCP/LINE 憑證
-    import os
-    from holder_radar import prices
-    from holder_radar.notify import LineAdapter
-    from holder_radar.bigquery_cohort import run_cohort  # noqa: F401 (Task 2/3)
+def snapshot(conn, cohort_source, as_of_date: str, price: float) -> dict:
+    """BigQuery 全量更新 cohort（吃 ~0.45TB 額度，≤2次/月）。"""
+    row = {**cohort_source.run(), "date": as_of_date, "price": price}
+    store.upsert_cohort(conn, row)
+    return row
 
-    conn = store.init_db(os.getenv("HOLDER_RADAR_DB", "data/snapshot.sqlite"))
-    today = os.getenv("AS_OF_DATE") or __import__("datetime").date.today().isoformat()
-    price = prices.current_btc_usd()
-    # cohort_source: 薄 wrapper 把 BigQuery 包成 .run()(Task 2/3 完成後接上)
-    raise SystemExit("接上 BigQuery cohort_source 後即可跑;見 README 自架步驟。")
+
+def main() -> None:  # pragma: no cover - 組裝真實依賴,需 GCP/LINE 憑證
+    import sys
+    from holder_radar import prices
+    db = os.getenv("HOLDER_RADAR_DB", "data/snapshot.sqlite")
+    conn = store.init_db(db)
+    cmd = sys.argv[1] if len(sys.argv) > 1 else "daily"
+    if cmd == "snapshot":
+        from google.cloud import bigquery
+        from holder_radar import bigquery_cohort
+        as_of = os.getenv("AS_OF_DATE") or __import__("datetime").date.today().isoformat()
+        px = prices.daily_history(180)
+        client = bigquery.Client()
+
+        class _Src:
+            def run(self):
+                r = bigquery_cohort.run_cohort(client, as_of, px)
+                r["lth_cost_basis"] = r.get("lth_cost_basis")  # 目前未算,留欄位
+                return r
+        snapshot(conn, _Src(), as_of, prices.current_btc_usd())
+    else:  # daily
+        from holder_radar.notify import LineAdapter
+        px = prices.daily_history(180)
+        notifier = (LineAdapter(os.environ["LINE_TOKEN"], os.environ["LINE_TO"])
+                    if os.getenv("LINE_TOKEN") else None)
+        daily(conn, notifier, prices.current_btc_usd(), px, "app/assets/data.js")

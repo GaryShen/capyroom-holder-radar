@@ -53,6 +53,14 @@
     lth = lth.map((v, i) => v + Math.sin(i * 0.3) * 0.18);
     lth[N - 1] = 79.0;
 
+    // 真實資料注入(window.RADAR_DATA,由 data.js 提供);無則沿用上面的 demo 曲線
+    if (window.RADAR_DATA) {
+      const D = window.RADAR_DATA;
+      if (D.price && D.price.length === N) price = D.price.slice();
+      if (D.cost && D.cost.length === N) cost = D.cost.slice();
+      if (D.lth && D.lth.length === N) lth = D.lth.slice();
+    }
+
     // chart 1 geometry
     const W = 1000, H = 360, pT = 14, pB = 30, pL = 2, pR = 2, yMin = 55000, yMax = 103000;
     const X = i => pL + i / (N - 1) * (W - pL - pR);
@@ -82,12 +90,13 @@
     for (let i = N - 1; i >= 0; i--) sthArea += " L " + X2(i).toFixed(1) + " " + Y2(lth[i]).toFixed(1);
     sthArea += " Z";
 
-    // donut large (r=80)
+    // donut large (r=80) —— 比例優先用真實資料
+    const donutR = (window.RADAR_DATA && window.RADAR_DATA.donut) ? window.RADAR_DATA.donut.lth_pct : 0.79;
     const C = 2 * Math.PI * 80;
-    const lthLen = 0.79 * C;
+    const lthLen = donutR * C;
     // donut small (r=56)
     const Csm = 2 * Math.PI * 56;
-    const lthLenSm = 0.79 * Csm;
+    const lthLenSm = donutR * Csm;
 
     // ---- long-horizon history (2017-01 .. 2026-06, monthly) ----
     const M = 114;
@@ -385,9 +394,26 @@
     }
   }
 
+  // 把真實資料(window.RADAR_DATA.latest)塞進 editorial 畫面的文字節點
+  function syncText() {
+    const D = window.RADAR_DATA;
+    if (!D || !D.latest) return;
+    const L = D.latest;
+    const set = (id, text) => { const el = document.getElementById(id); if (el && text != null) el.textContent = text; };
+    set("r-lede", L.headline);
+    set("r-lthbtc", L.lth_btc_str);
+    set("r-sthbtc", L.sth_btc_str);
+    set("r-price", L.price_str);
+    set("r-cost", L.cost_str);
+    set("r-under", L.underwater_str);
+    const donut = document.getElementById("r-donut");
+    if (donut && L.lth_pct_str) donut.innerHTML = L.lth_pct_str.replace("%", "<span>%</span>");
+  }
+
   function init() {
     render();
     wireControls();
+    syncText();
   }
 
   if (document.readyState === "loading") {

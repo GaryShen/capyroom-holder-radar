@@ -1,11 +1,7 @@
-from holder_radar import cli, store, line_bot
+from holder_radar import cli, store, line_bot, export
 
-BASE = dict(lth_btc=15.0, sth_btc=4.0, circulating_btc=19.0,
-            sth_cost_basis=71400.0, lth_cost_basis=30000.0)
-
-
-class _Source:
-    def run(self): return dict(BASE)
+SNAP = dict(date="2026-06-28", lth_btc=16.0, sth_btc=3.3, circulating_btc=19.3,
+            sth_cost_basis=71400.0, lth_cost_basis=30000.0, price=72000.0)
 
 
 class _Notifier:
@@ -13,24 +9,50 @@ class _Notifier:
     def send(self, sigs): self.sent.append(sigs)
 
 
-def test_run_daily_persists_and_alerts_on_cross_down(tmp_path):
+def test_daily_alerts_on_cross_down_and_writes_data_js(tmp_path):
     conn = store.init_db(tmp_path / "t.sqlite")
-    store.upsert_cohort(conn, {"date": "2026-06-28", "price": 72000.0, **BASE})  # 昨天在線上
+    store.upsert_cohort(conn, SNAP)                       # 昨天:價 72000 ≥ 成本 71400
     n = _Notifier()
-    sigs = cli.run_daily(conn, _Source(), n, "2026-06-29", price=70000.0)  # 今天跌穿
-    assert store.last_processed_date(conn) == "2026-06-29"
+    px = {"2026-06-27": 73000.0, "2026-06-29": 70000.0}   # 今天跌到 70000 < 71400
+    data_js = tmp_path / "data.js"
+    sigs = cli.daily(conn, n, 70000.0, px, str(data_js))
     assert any(s.kind == "sth_cross_down" for s in sigs)
-    assert n.sent  # alert 有推
+    assert n.sent                                         # alert 有推
+    assert "window.RADAR_DATA" in data_js.read_text(encoding="utf-8")
 
 
-def test_run_daily_no_push_when_only_info(tmp_path):
+def test_daily_no_push_when_price_stays_above(tmp_path):
     conn = store.init_db(tmp_path / "t.sqlite")
-    store.upsert_cohort(conn, {"date": "2026-06-28", "price": 80000.0, **BASE})
+    store.upsert_cohort(conn, SNAP)
     n = _Notifier()
-    cli.run_daily(conn, _Source(), n, "2026-06-29", price=80000.0)  # 沒跨界
-    assert not n.sent  # 只有 info 不推,省額度
+    px = {"2026-06-29": 80000.0}
+    cli.daily(conn, n, 80000.0, px, str(tmp_path / "d.js"))
+    assert not n.sent
+
+
+def test_snapshot_stores_cohort(tmp_path):
+    conn = store.init_db(tmp_path / "t.sqlite")
+
+    class _Src:
+        def run(self): return dict(lth_btc=16.6, sth_btc=3.3, circulating_btc=19.9,
+                                   sth_cost_basis=70451.0, lth_cost_basis=None)
+    cli.snapshot(conn, _Src(), "2026-06-29", price=59247.0)
+    assert store.latest(conn)["sth_cost_basis"] == 70451.0
+
+
+def test_export_forward_fills_cost_and_builds_donut():
+    price_by_date = {"2026-06-27": 60000.0, "2026-06-28": 59900.0, "2026-06-29": 59247.0}
+    snaps = [dict(date="2026-06-28", lth_btc=16.6, sth_btc=3.3, circulating_btc=19.9,
+                  sth_cost_basis=70451.0, lth_cost_basis=None, price=59900.0)]
+    latest = snaps[0]
+    d = export.build_dashboard_data(price_by_date, snaps, latest)
+    assert d["price"][-1] == 59247.0
+    assert d["cost"][-1] == 70451.0                       # 由快照 forward-fill
+    assert d["cost"][0] == 70451.0                        # 開頭回填第一個已知值
+    assert d["donut"]["lth_pct"] == round(16.6 / 19.9, 4)
+    assert d["latest"]["underwater"] is True              # 59247 < 70451
 
 
 def test_line_handle_query_returns_state_and_disclaimer():
-    reply = line_bot.handle_query({"price": 60195.0, **BASE})
-    assert "71,400" in reply and "非投資建議" in reply
+    reply = line_bot.handle_query({"price": 59247.0, **SNAP})
+    assert "非投資建議" in reply
