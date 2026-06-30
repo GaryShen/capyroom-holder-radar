@@ -2,7 +2,7 @@ name: Deploy dashboard to Pages
 
 # 把 app/(靜態儀表板)發佈到 GitHub Pages。
 # push 到 main 或手動觸發即重新部署。目前用 demo 資料;
-# data.json 接點完成後,改由每日 workflow commit data.json 進 app/,Pages 自動更新。
+# data.js 接點完成後,改由每日 workflow commit data.js 進 app/assets/,Pages 自動更新。
 on:
   push:
     branches: [main]

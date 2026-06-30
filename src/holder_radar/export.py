@@ -2,8 +2,8 @@
 
 接點:輸出 app/assets/data.js(同步 <script>,免 fetch、file:// 與 Pages 都能跑)。
 - price:近 N 天日線(CoinGecko 免費,天天可更新)
-- cost / lth:STH 成本線、LTH 供給%——慢變數,來自 ≤2次/月的 BigQuery 快照;
-  歷史點不足時用「最新已知值」補平,隨快照累積逐步填實。
+- cost / lth:STH 成本線、LTH 供給%——慢變數,預設來自 bgeometrics(免費每日,無 key);
+  歷史點不足時用「最新已知值」補平,隨每日累積逐步填實。(BigQuery 自算為選配備援)
 """
 import json
 from holder_radar import judge
