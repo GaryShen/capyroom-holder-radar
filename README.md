@@ -1,8 +1,9 @@
 # 持有者結構雷達 · Holder Structure Radar
 
-免費、開源、繁中的**比特幣持有者結構雷達**。自己從 BigQuery 公開資料集
-**增量算出** LTH/STH 供給與成本線,把「現在誰在抱、誰在賣、買的人套牢沒」
+免費、開源、繁中的**比特幣持有者結構雷達**。每日從**免費**的 bgeometrics(無 key)
+抓 LTH/STH 供給與成本線,把「現在誰在抱、誰在賣、買的人套牢沒」
 合成一句白話判讀,並在訊號觸發時推播(LINE / Telegram)。
+(BigQuery 自算為**選配備援**,預設不跑、不花錢。)
 
 > 只做資料呈現與方法拆解,**非投資建議**。每個畫面結尾固定附免責。
 
@@ -50,12 +51,13 @@ src/holder_radar/        # Python:資料管線 + 判讀 + 通知(後端)
   prices.py              #   CoinGecko 價格
   store.py               #   SQLite 快取讀寫
   judge.py               #   ★ 判讀層:訊號 + 繁中合成(純函式)
+  export.py              #   ★ src↔app 接點:輸出 app/assets/data.js(window.RADAR_DATA)
   notify.py              #   LINE / Telegram 可插拔 adapter
   cli.py                 #   每日入口:算→寫→偵測→(alert才)推
   line_bot.py            #   LINE 查詢(免費 reply)
 app/                     # 靜態儀表板(前端,Claude Design 成品,零依賴)
-  index.html  assets/styles.css  assets/radar.js
-tests/                   # pytest(13 綠;judge/store/prices/notify/cli/line_bot)
+  index.html  assets/styles.css  assets/radar.js  assets/data.js
+tests/                   # pytest(22 綠;core/pipeline/bgeometrics/bigquery_cohort)
 data/                    # snapshot.sqlite(種子快照,git 追蹤)
 .claude/launch.json      # 預覽:preview_start radar-static
 ```
@@ -90,14 +92,14 @@ uv run pytest -q              # 跑測試(目前 13 綠)
 
 - 儀表板已可上線:`.github/workflows/pages.yml` 會把 `app/` 發到 Pages。
   你只要 ① 把 repo 推上 GitHub ② Settings → Pages 選 GitHub Actions,公開網址即生效(先 demo 數字)。
-- `data.json` 接點完成後,每日 workflow 會 commit `data.json` 進 `app/`,Pages 自動換成真實數字。
+- `data.js` 接點完成後,每日 workflow 會 commit `data.js` 進 `app/assets/`,Pages 自動換成真實數字。
 - **為什麼這樣分**:LINE push 按人頭計費,大眾免費推播做不到 → 儀表板公開一份大家看,**要警報的人 fork 自架、用自己的免費額度**。
 
 ## 現況
 
 | 模組 | 狀態 |
 |---|---|
-| judge / store / prices / notify / cli / line_bot | ✅ 完成,20 tests 綠 |
+| judge / store / prices / notify / cli / line_bot | ✅ 完成,22 tests 綠 |
 | app/ 儀表板 + 真實資料(`data.js`) | ✅ 完成、已上線、渲染驗證 |
 | **bgeometrics 免費 cohort 來源** | ✅ 完成:cohort 每日免費更新(無 BigQuery、零費用) |
 | GitHub Pages 部署 | ✅ 上線 https://garyshen.github.io/capyroom-holder-radar/ |
