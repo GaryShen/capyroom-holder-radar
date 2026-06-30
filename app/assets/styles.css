@@ -482,3 +482,10 @@ body {
   .hist-episodes { grid-template-columns: 1fr; }
   .stats { grid-template-columns: 1fr 1fr; }
 }
+
+/* === 單一 editorial 畫面:亮底頁面 + 隱藏 terminal / LINE-TG 示意(2026-06 調整) === */
+body { background: #EFE8DA; background-image: none; color: #211C16; }
+.app-bar__title { color: #6b6253; }
+.sweep-control { color: #6b6253; }
+.view-note { display: none; }
+[data-view="terminal"], .push-showcase { display: none !important; }
