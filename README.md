@@ -117,6 +117,7 @@ uv run pytest -q              # 跑測試(目前 13 綠)
 2. Settings → **Pages** → Source 選 **GitHub Actions** → 你的公開儀表板網址即生效。
    - `Daily update` workflow 每天免費跑(CoinGecko 現價 + 重生 data.js),**不需任何 secret**。
 3. (選配)**LINE 警報**:Settings → Secrets 設 `LINE_TOKEN`、`LINE_TO`(自己的 LINE 官方帳號 Messaging API)→ 跌穿成本線時推你自己(免費 200則/月個人盯盤夠用)。
+   - 驗證憑證:`LINE_TOKEN=... LINE_TO=... uv run holder-radar test-push` → 手機收到一則測試警報即成功。
 4. (選配,**可能花錢**)**自己更新 cohort**:設 `GCP_SA_JSON`、`GCP_PROJECT` + `HOLDER_RADAR_RUN_SNAPSHOT=1`,手動跑 `Cohort snapshot`(BigQuery,每次掃描約 0.45TB)。
 
 > ⚠️ **「1TB/月免費」只在 Sandbox(未綁帳單)帳號保證有效。** 綁了帳單的帳號可能**拿不到免費額度** → 每次約 **$7 USD**(實測)。

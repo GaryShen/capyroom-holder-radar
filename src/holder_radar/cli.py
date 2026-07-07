@@ -65,6 +65,19 @@ def main() -> None:  # pragma: no cover - 組裝真實依賴,需 GCP/LINE 憑證
                 r["lth_cost_basis"] = r.get("lth_cost_basis")  # 目前未算,留欄位
                 return r
         snapshot(conn, _Src(), as_of, prices.current_btc_usd())
+    elif cmd == "test-push":
+        # 手動發一則測試警報:驗 LINE OA 憑證 / 拍片用。
+        # 訊息文案沿用 judge.detect(單一來源),成本線取 DB 最新真實值;只假造價格跨線讓警報觸發。
+        from holder_radar.notify import LineAdapter
+        if not (os.getenv("LINE_TOKEN") and os.getenv("LINE_TO")):
+            raise SystemExit("請先設環境變數 LINE_TOKEN(channel access token)與 LINE_TO(你的 userId)。")
+        latest = store.latest(conn)
+        if not latest:
+            raise SystemExit("DB 尚無 cohort 資料,先跑一次 daily。")
+        c = latest["sth_cost_basis"]
+        sigs = judge.detect({**latest, "price": c - 1}, {**latest, "price": c + 1}, [])
+        LineAdapter(os.environ["LINE_TOKEN"], os.environ["LINE_TO"]).send(sigs)
+        print(f"已送出測試警報(成本線 ${c:,.0f}),看你的 LINE。")
     else:  # daily
         from holder_radar.notify import LineAdapter
         from holder_radar import bgeometrics
