@@ -90,3 +90,7 @@ def main() -> None:  # pragma: no cover - 組裝真實依賴,需 GCP/LINE 憑證
         notifier = (LineAdapter(os.environ["LINE_TOKEN"], os.environ["LINE_TO"])
                     if os.getenv("LINE_TOKEN") else None)
         daily(conn, notifier, prices.current_btc_usd(), px, "app/assets/data.js", fresh_cohort=fresh)
+
+
+if __name__ == "__main__":  # 少了這行,`python -m holder_radar.cli` 會靜默 no-op(exit 0)
+    main()

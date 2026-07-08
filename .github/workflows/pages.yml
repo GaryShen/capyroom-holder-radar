@@ -1,12 +1,16 @@
 name: Deploy dashboard to Pages
 
 # 把 app/(靜態儀表板)發佈到 GitHub Pages。
-# push 到 main 或手動觸發即重新部署。目前用 demo 資料;
-# data.js 接點完成後,改由每日 workflow commit data.js 進 app/assets/,Pages 自動更新。
+# 觸發:① push 到 main(人為改 app/)② Daily update 跑完(它 commit 新的 data.js)③ 手動。
+# ②是必要的:daily 用預設 GITHUB_TOKEN 推 commit,而 GITHUB_TOKEN 的 push 不會觸發 on:push
+# (GitHub 防遞迴機制)。所以得靠 workflow_run 明確串接,否則網站永遠停在舊資料。
 on:
   push:
     branches: [main]
     paths: ["app/**", ".github/workflows/pages.yml"]
+  workflow_run:
+    workflows: ["Daily update (free)"]
+    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -20,12 +24,18 @@ concurrency:
 
 jobs:
   deploy:
+    # workflow_run 不管上游成敗都會觸發;daily 失敗時不要拿舊資料重新部署。
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
+      # workflow_run 事件的 github.sha 是「觸發 daily 的那個 commit」,不是 daily 新推的那個。
+      # 明抓 main 才拿得到剛 commit 的 data.js。
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
