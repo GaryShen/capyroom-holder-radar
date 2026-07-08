@@ -26,8 +26,11 @@ jobs:
         run: uv run python -m holder_radar.cli daily
         env:
           HOLDER_RADAR_DB: data/snapshot.sqlite
+          # 推播為選配:兩組都沒設就不推(網站照常更新)。LINE 優先,否則 Telegram。
           LINE_TOKEN: ${{ secrets.LINE_TOKEN }}
           LINE_TO: ${{ secrets.LINE_TO }}
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
       - name: commit 更新
         run: |
           git config user.name "holder-radar-bot"

@@ -116,13 +116,86 @@ uv run pytest -q              # 跑測試(目前 13 綠)
 1. **Fork** 這個 repo。
 2. Settings → **Pages** → Source 選 **GitHub Actions** → 你的公開儀表板網址即生效。
    - `Daily update` workflow 每天免費跑(CoinGecko 現價 + 重生 data.js),**不需任何 secret**。
-3. (選配)**LINE 警報**:Settings → Secrets 設 `LINE_TOKEN`、`LINE_TO`(自己的 LINE 官方帳號 Messaging API)→ 跌穿成本線時推你自己(免費 200則/月個人盯盤夠用)。
-   - 驗證憑證:`LINE_TOKEN=... LINE_TO=... uv run holder-radar test-push` → 手機收到一則測試警報即成功。
+3. (選配)**LINE 警報**——跌穿/站回成本線時推你自己。詳見下方〔設定 LINE 推播〕。
 4. (選配,**可能花錢**)**自己更新 cohort**:設 `GCP_SA_JSON`、`GCP_PROJECT` + `HOLDER_RADAR_RUN_SNAPSHOT=1`,手動跑 `Cohort snapshot`(BigQuery,每次掃描約 0.45TB)。
 
 > ⚠️ **「1TB/月免費」只在 Sandbox(未綁帳單)帳號保證有效。** 綁了帳單的帳號可能**拿不到免費額度** → 每次約 **$7 USD**(實測)。
 > 不想花錢就**別跑 snapshot**——網站靠每日免費的 CoinGecko 價格照常更新,cohort 用現有快照即可。要更新 cohort 又要真免費,請用 Sandbox 帳號。
 > 程式有防呆:未設 `HOLDER_RADAR_RUN_SNAPSHOT=1` 不會跑 BigQuery;每次查詢前先 dry-run 量測(免費)。
+
+---
+
+## 設定推播(選配)
+
+推播是**選配**——不設也能用,網站照常每天更新,只是不會主動叫你。
+**兩組都沒設就不推;兩組都設的話 LINE 優先。**
+
+| 通道 | 設定成本 | 適合 |
+|---|---|---|
+| **Telegram** | ~2 分鐘 | 只想快點收到警報 → **建議先用這個** |
+| **LINE** | ~10 分鐘(要辦官方帳號) | 台灣人主場,想收在平常用的 App |
+
+---
+
+### 方案 A:Telegram(2 分鐘)
+
+1. 在 Telegram 找 **[@BotFather](https://t.me/BotFather)** → `/newbot` → 取名 → 它給你一串 token(= `TG_TOKEN`)。
+2. 用你的 Telegram 私訊剛建好的 bot,隨便傳一句話(**不先傳訊,bot 不能主動找你**)。
+3. 拿 `TG_CHAT_ID`:瀏覽器開
+   `https://api.telegram.org/bot<你的TG_TOKEN>/getUpdates`
+   → 找 `"chat":{"id":123456789}` 那個數字。
+4. 驗證:
+   ```bash
+   TG_TOKEN='...' TG_CHAT_ID='...' uv run holder-radar test-push
+   ```
+
+---
+
+### 方案 B:LINE(約 10 分鐘,免費 200 則/月)
+
+免費額度 **200 則/月**;一個人盯盤,一個月警報幾次而已,遠遠用不完。
+
+#### 1. 建立 Messaging API channel
+
+到 **[LINE Developers Console](https://developers.line.biz/console/)**(⚠️ 不是「LINE 官方帳號管理後台」,那邊發不了 token)→ 建 Provider → 建 **Messaging API** channel(會順便替你生成一個 LINE 官方帳號)。
+
+#### 2. 拿 `LINE_TOKEN`(= Channel access token)
+
+Channel 頁 → **「Messaging API」分頁** → 拉到最底 → **Channel access token (long-lived)** → 按 **Issue**。
+
+> 🕳️ **坑**:預設是空的,**要按 Issue 才會生成**,不是自動顯示。
+
+#### 3. 拿 `LINE_TO`(= 你的 userId)
+
+先用**你私人的 LINE 加這個官方帳號好友**(不加好友,推播會被擋)。
+然後 Channel 頁 → **「Basic settings」分頁** → 一路滑到**最底** → **Your user ID**(`U` 開頭那串)。
+
+> 🕳️ **坑**:token 在 **Messaging API** 分頁、userId 在 **Basic settings** 分頁——**兩個在不同頁**,在同一頁找會找不到。
+> 🔒 userId 是「一人 × 一 bot」的不透明代號:同一個你,在別的 bot 眼中是完全不同的 ID。所以不能跨 channel 共用,也無法憑空得知別人的。
+
+#### 4. 本機驗證
+
+```bash
+LINE_TOKEN='你的token' LINE_TO='你的userId' uv run holder-radar test-push
+```
+
+| 錯誤 | 通常代表 |
+|---|---|
+| `401` | token 錯了,或沒按 Issue |
+| `400` | userId 格式不對,或**還沒加官方帳號好友** |
+| `403` | token 沒有 push 權限 |
+
+---
+
+### 最後一步:進 CI(兩個方案都一樣)
+
+`test-push` 會用真實資料(同 `judge.detect` 的文案、DB 最新成本線)發一則警報,只有「觸發」那一下是手動的——收到就代表憑證正確。
+
+接著到 GitHub repo → **Settings → Secrets and variables → Actions → New repository secret**,把你那組變數存進去(`TG_TOKEN`+`TG_CHAT_ID`,或 `LINE_TOKEN`+`LINE_TO`)。
+
+設完就結束了,不用改任何程式——`Daily update` workflow 每天(台灣時間 09:20)自動跑,偵測到**跌穿/站回**成本線就推你。
+
+> 只設一半(例如只有 `LINE_TOKEN`)會被視為沒設、安靜略過,不會半夜炸錯誤。
 
 ---
 

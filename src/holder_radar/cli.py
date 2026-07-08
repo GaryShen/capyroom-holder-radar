@@ -33,6 +33,17 @@ def daily(conn, notifier, price: float, price_by_date: dict, data_js_path: str,
     return sigs
 
 
+def make_notifier(env=os.environ):
+    """依環境變數選推播通道:LINE 優先,否則 Telegram,都沒設就不推(網站照常更新)。
+    兩個變數都要有才算數——只設一半視為沒設,不要在半夜炸 KeyError。"""
+    from holder_radar.notify import LineAdapter, TelegramAdapter
+    if env.get("LINE_TOKEN") and env.get("LINE_TO"):
+        return LineAdapter(env["LINE_TOKEN"], env["LINE_TO"])
+    if env.get("TG_TOKEN") and env.get("TG_CHAT_ID"):
+        return TelegramAdapter(env["TG_TOKEN"], env["TG_CHAT_ID"])
+    return None
+
+
 def snapshot(conn, cohort_source, as_of_date: str, price: float) -> dict:
     """BigQuery 全量更新 cohort（吃 ~0.45TB 額度，≤2次/月）。"""
     row = {**cohort_source.run(), "date": as_of_date, "price": price, "cohort_date": as_of_date}
@@ -66,20 +77,22 @@ def main() -> None:  # pragma: no cover - 組裝真實依賴,需 GCP/LINE 憑證
                 return r
         snapshot(conn, _Src(), as_of, prices.current_btc_usd())
     elif cmd == "test-push":
-        # 手動發一則測試警報:驗 LINE OA 憑證 / 拍片用。
+        # 手動發一則測試警報:驗憑證 / 拍片用。
         # 訊息文案沿用 judge.detect(單一來源),成本線取 DB 最新真實值;只假造價格跨線讓警報觸發。
-        from holder_radar.notify import LineAdapter
-        if not (os.getenv("LINE_TOKEN") and os.getenv("LINE_TO")):
-            raise SystemExit("請先設環境變數 LINE_TOKEN(channel access token)與 LINE_TO(你的 userId)。")
+        notifier = make_notifier()
+        if not notifier:
+            raise SystemExit(
+                "沒有可用的推播通道。擇一設定:\n"
+                "  LINE:     LINE_TOKEN + LINE_TO\n"
+                "  Telegram: TG_TOKEN + TG_CHAT_ID")
         latest = store.latest(conn)
         if not latest:
             raise SystemExit("DB 尚無 cohort 資料,先跑一次 daily。")
         c = latest["sth_cost_basis"]
         sigs = judge.detect({**latest, "price": c - 1}, {**latest, "price": c + 1}, [])
-        LineAdapter(os.environ["LINE_TOKEN"], os.environ["LINE_TO"]).send(sigs)
-        print(f"已送出測試警報(成本線 ${c:,.0f}),看你的 LINE。")
+        notifier.send(sigs)
+        print(f"已送出測試警報(成本線 ${c:,.0f}),看你的 {notifier.name}。")
     else:  # daily
-        from holder_radar.notify import LineAdapter
         from holder_radar import bgeometrics
         px = prices.daily_history(180)
         try:
@@ -87,9 +100,8 @@ def main() -> None:  # pragma: no cover - 組裝真實依賴,需 GCP/LINE 憑證
         except Exception as e:
             print(f"bgeometrics 抓取失敗,改用上次 cohort 前推:{e}")
             fresh = None
-        notifier = (LineAdapter(os.environ["LINE_TOKEN"], os.environ["LINE_TO"])
-                    if os.getenv("LINE_TOKEN") else None)
-        daily(conn, notifier, prices.current_btc_usd(), px, "app/assets/data.js", fresh_cohort=fresh)
+        daily(conn, make_notifier(), prices.current_btc_usd(), px,
+              "app/assets/data.js", fresh_cohort=fresh)
 
 
 if __name__ == "__main__":  # 少了這行,`python -m holder_radar.cli` 會靜默 no-op(exit 0)

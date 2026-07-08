@@ -67,3 +67,14 @@ def test_export_forward_fills_cost_and_builds_donut():
 def test_line_handle_query_returns_state_and_disclaimer():
     reply = line_bot.handle_query({"price": 59247.0, **SNAP})
     assert "非投資建議" in reply
+
+
+def test_make_notifier_picks_channel_by_env():
+    LINE = dict(LINE_TOKEN="t", LINE_TO="U1")
+    TG = dict(TG_TOKEN="t", TG_CHAT_ID="-100")
+    assert cli.make_notifier({}) is None                       # 都沒設 → 不推
+    assert cli.make_notifier(LINE).name == "LINE"
+    assert cli.make_notifier(TG).name == "Telegram"
+    assert cli.make_notifier({**LINE, **TG}).name == "LINE"    # 都設 → LINE 優先
+    assert cli.make_notifier({"LINE_TOKEN": "t"}) is None      # 只設一半 → 視為沒設,不炸
+    assert cli.make_notifier({"TG_TOKEN": "t"}) is None

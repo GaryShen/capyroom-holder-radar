@@ -9,6 +9,8 @@ def format_message(signals) -> str:
 
 
 class LineAdapter:
+    name = "LINE"
+
     def __init__(self, token, to, post=requests.post):
         self.token, self.to, self.post = token, to, post
 
@@ -22,6 +24,8 @@ class LineAdapter:
 
 
 class TelegramAdapter:
+    name = "Telegram"
+
     def __init__(self, token, chat_id, post=requests.post):
         self.token, self.chat_id, self.post = token, chat_id, post
 
