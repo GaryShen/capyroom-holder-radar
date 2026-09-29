@@ -58,6 +58,16 @@ def test_current_btc_usd():
     assert prices.current_btc_usd(get=lambda *a, **k: _Resp({"bitcoin": {"usd": 60195.0}})) == 60195.0
 
 
+def test_current_btc_usd_falls_back_to_coinbase():
+    import requests
+
+    def get(url, **k):
+        if "coingecko" in url:
+            raise requests.HTTPError("403")
+        return _Resp({"data": {"amount": "83960.6"}})
+    assert prices.current_btc_usd(get=get) == 83960.6
+
+
 def test_daily_history_maps_date_to_price():
     h = prices.daily_history(1, get=lambda *a, **k: _Resp({"prices": [[1750000000000, 60000.0]]}))
     assert list(h.values()) == [60000.0]

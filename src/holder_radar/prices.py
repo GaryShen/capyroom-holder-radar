@@ -6,10 +6,17 @@ BASE = "https://api.coingecko.com/api/v3"
 
 
 def current_btc_usd(get=requests.get) -> float:
-    r = get(f"{BASE}/simple/price",
-            params={"ids": "bitcoin", "vs_currencies": "usd"}, timeout=20)
-    r.raise_for_status()
-    return float(r.json()["bitcoin"]["usd"])
+    try:
+        r = get(f"{BASE}/simple/price",
+                params={"ids": "bitcoin", "vs_currencies": "usd"}, timeout=20)
+        r.raise_for_status()
+        return float(r.json()["bitcoin"]["usd"])
+    except requests.RequestException as e:
+        # CoinGecko simple/price 會被 CloudFront 403 擋(2026-09 起),退 Coinbase 現價
+        print(f"CoinGecko 現價失敗,改用 Coinbase:{e}")
+        r = get("https://api.coinbase.com/v2/prices/BTC-USD/spot", timeout=20)
+        r.raise_for_status()
+        return float(r.json()["data"]["amount"])
 
 
 def daily_history(days: int, get=requests.get) -> dict[str, float]:
